@@ -69,21 +69,15 @@ class RedBlackTree():
             else:
                 self._delete_case2(node)
         else:
-            if node._left is None or node._right is None:
-                child = node._left if node._left is not None else node._right
+            child = node._left if node._left is not None else node._right
+            if node._color == self._Node.RED or child._color == self._Node.RED:
                 self._replace_node(node, child)
-                if node._color == self._Node.BLACK:
-                    if child is not None and child._color == self._Node.RED:
-                        child._color = self._Node.BLACK
-                    else:
-                        self._delete_case1(child)
+                if child is not None:
+                    child._color = self._Node.BLACK
             else:
-                successor = self._successor(node)
-                node._element = successor._element
-                self.delete(successor._element)
+                self._delete_case1(node)
 
         self._size -= 1
-
 
 
 
@@ -93,7 +87,7 @@ class RedBlackTree():
             self._delete_case2(node)
 
     def _delete_case2(self, node):
-        sibling = self._sibling(node)
+        sibling = self._sibiling(node)
 
         if sibling._color == self._Node.RED:
             node._parent._color = self._Node.RED
@@ -106,39 +100,39 @@ class RedBlackTree():
         self._delete_case3(node)
 
     def _delete_case3(self, node):
-        sibling = self._sibling(node)
+        sibling = self._sibiling(node)
         if (node._parent._color == self._Node.BLACK and
             sibling._color == self._Node.BLACK and
-            sibling._left._color == self._Node.BLACK and
-            sibling._right._color == self._Node.BLACK):
+            self._is_black(sibling._left) and
+            self._is_black(sibling._right)):
             sibling._color = self._Node.RED
             self._delete_case1(node._parent)
         else:
             self._delete_case4(node)
 
     def _delete_case4(self, node):
-        sibling = self._sibling(node)
+        sibling = self._sibiling(node)
         if (node._parent._color == self._Node.RED and
             sibling._color == self._Node.BLACK and
-            sibling._left._color == self._Node.BLACK and
-            sibling._lef_right._color == self._Node.BLACK):
+            self._is_black(sibling._left) and
+            self._is_black(sibling._right)):
             sibling._color = self._Node.RED
             node._parent._color = self._Node.BLACK
         else:
             self._delete_case5(node)
 
     def _delete_case5(self, node):
-        sibling = self._sibling(node)
+        sibling = self._sibiling(node)
         if sibling._color == self._Node.BLACK:
             if (node == node._parent._left and
-                sibling._right._color == self._Node.BLACK and
-                sibling._left._color == self._Node.RED):
+                self._is_black(sibling._right) and
+                sibling._left is not None and sibling._left._color == self._Node.RED):
                 sibling._color = self._Node.RED
                 sibling._left._color = self._Node.BLACK
                 self._rotate_right(sibling)
             elif (node == node._parent._right and
-                sibling._left._color == self._Node.BLACK and
-                sibling._right._color == self._Node.RED):
+                self._is_black(sibling._left) and
+                sibling._right is not None and sibling._right._color == self._Node.RED):
                 sibling._color = self._Node.RED
                 sibling._right._color = self._Node.BLACK
                 self._rotate_left(sibling)
@@ -146,8 +140,7 @@ class RedBlackTree():
         self._delete_case6(node)
 
     def _delete_case6(self, node):
-        sibling = self._sibling(node)
-        
+        sibling = self._sibiling(node)
         sibling._color = node._parent._color
         node._parent._color = self._Node.BLACK
 
@@ -242,13 +235,16 @@ class RedBlackTree():
     def is_leaf(self, node):
         return node._left is None and node._right is None
 
+    def _is_black(self, node):
+        return node == None or node._color == self._Node.BLACK
+
     def _successor(self, node):
         successor = node._right
         while successor._left != None:
             successor = successor._left
         return successor
 
-    def _sibling(self, node):
+    def _sibiling(self, node):
         parent = node._parent
 
         if parent._left == node:
